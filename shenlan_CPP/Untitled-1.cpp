@@ -6,6 +6,7 @@
 # include <memory>
 # include <map>
 # include <unordered_set>
+# include <ranges>
 
 using namespace std;
 /*
@@ -54,7 +55,7 @@ int main()
     std::unordered_set<int> s{3, 1, 5, 4, 1};
     for (auto p : s){
         cout << p << endl;
-    }*/
+    }
 
     int y = 10;
     int z = 3;
@@ -63,7 +64,10 @@ int main()
         return val > y;
         };
     std::cout << x(5) <<std::endl;
-    auto lam = []<typename T>(T val) {return val +1;};
+    auto lam = []<typename T>(T val) {return val +1;};*/
+    std::vector<int> x{1,2,3, 4, 5};
+    auto it = std::ranges::find(x, 3);
+    std::cout << *it << std::endl;
 
 
     return 0;
