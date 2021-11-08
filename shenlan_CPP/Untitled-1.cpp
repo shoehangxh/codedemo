@@ -28,9 +28,16 @@ int main()
     std::shared_ptr<int> x(new int(3), fun);
 }
 */
+struct Str{
+    int x;
+    int y;
+};
 
 int main()
 {
+    Str m_str;
+    m_str.x = 3;
+    std::cout << m_str.x >>std::endl;
     /*int* ptr = new int(3);
     int* ptr1 = new int[5];
     int a = 4;
@@ -64,12 +71,10 @@ int main()
         return val > y;
         };
     std::cout << x(5) <<std::endl;
-    auto lam = []<typename T>(T val) {return val +1;};*/
+    auto lam = []<typename T>(T val) {return val +1;};
     std::vector<int> x{1,2,3, 4, 5};
     auto it = std::ranges::find(x, 3);
-    std::cout << *it << std::endl;
-
-
+    std::cout << *it << std::endl;*/
     return 0;
 
 }
