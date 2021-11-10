@@ -6,7 +6,7 @@
 # include <memory>
 # include <map>
 # include <unordered_set>
-# include <ranges>
+//# include <ranges>
 
 using namespace std;
 /*
@@ -32,12 +32,22 @@ struct Str{
     int x;
     int y;
 };
+class str{
+public:
+    str(){
+    }
+    str(int input){
+        x = input;
+    }
+private:
+    int x;
+};
 
 int main()
 {
     Str m_str;
     m_str.x = 3;
-    std::cout << m_str.x >>std::endl;
+    std::cout << m_str.x << std::endl; 
     /*int* ptr = new int(3);
     int* ptr1 = new int[5];
     int a = 4;
