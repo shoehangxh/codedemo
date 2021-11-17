@@ -32,10 +32,8 @@ class MyDataset(Dataset):
         pic = self.imgs[index]
         label = self.label[index]
         pic = Image.open(datapath + '\\' + pic)
-        #pic = transforms.ToTensor()(pic)
         if self.transform is not None:
             pic = self.transform(pic)
-            #label = self.transform(label)
         label = np.array(label).astype(int)
         label = torch.from_numpy(label)
         return pic, label
