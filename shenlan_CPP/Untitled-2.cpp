@@ -1,9 +1,29 @@
 #include <iostream>
+/*struct Str2
+{
+    Str2* operator -> ()
+    {
+        return this;
+    }
+    int bla = 10;
+};
 struct Str
 {
-    int val;
+    Str(int* p)
+        :ptr(p)
+        {}
+    int& operator * ()
+    {
+        return *ptr;
+    }
+    Str2 operator -> ()
+    {
 
-
+        return Str2{};
+    }
+    int val = 5;
+private:
+    int* ptr;
 };
 Str Add(Str x, Str y)
 {
@@ -17,13 +37,16 @@ auto operator + (Str x, Str y)
     z.val = x.val + y.val;
     return z;
 }
-
-int main()
+*/
+struct Base
 {
-    Str x;
-    Str y;
-    Str z = Add(x, y);
-    Str a = x + y;
-    std::cout << z.val <<std::endl;
-    std::cout << a.val <<std::endl;
+};
+struct Derive: public Base
+{
+};
+int main()
+{  
+    Derive d;
+    Base& ref = d;
+    Base* ptr = &d;
 }
