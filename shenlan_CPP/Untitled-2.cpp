@@ -40,13 +40,32 @@ auto operator + (Str x, Str y)
 */
 struct Base
 {
+    Base ()
+    {
+        fun();
+    }
+    virtual void fun(int x = 3) {
+        std::cout << "Base: " << x << std::endl;
+    }   
 };
-struct Derive: public Base
+struct Derive :Base
 {
+    Derive ()
+        :Base()
+    {
+        fun();
+    }
+    void fun(int x = 4) override
+    {
+        std::cout << "Derive: " << x << std::endl;
+    }
 };
+void proc(Base& b)
+{
+    b.fun();
+}
 int main()
-{  
-    Derive d;
-    Base& ref = d;
-    Base* ptr = &d;
+{ 
+   Derive d;
+   //proc(d);
 }
