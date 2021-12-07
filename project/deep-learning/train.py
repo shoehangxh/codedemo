@@ -12,8 +12,13 @@ import cv2 as cv
 from PIL import Image
 from model.mynet import mynet
 
+transfer = False
+frozen = False
+fenlei = True
+huigui = False
+
 def load_tradata():
-    root_path = r'../data/4DL/my_data/train'
+    root_path = r'../data/4Vi/data2/train'
     tran_imags = []
     labels = []
     seq_names = ['0', '1', '2', '3', '4']
@@ -27,8 +32,6 @@ def load_tradata():
             #imgs = np.expand_dims(imgs, axis=2)
             imgs = imgs/255
             tran_imags.append(imgs)
-            fenlei = False
-            huigui = True
             if fenlei:
                 labels.append(int(seq_name))
             if huigui:
@@ -57,11 +60,11 @@ def main():
                                    #transforms.CenterCrop(224),
                                    transforms.ToTensor(),
                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])}
-    img_path = r"../data/4DL/my_data"
+    img_path = r"../data/4Vi/data2"
     train_dataset = datasets.ImageFolder(root=os.path.join(img_path, "train"),
                                          transform=data_transform["train"])
     train_num = len(train_dataset)
-    batch_size = 8
+    batch_size = 16
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
     print('Using {} dataloader workers every process'.format(nw))
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -79,8 +82,6 @@ def main():
                                                                            val_num))
 
     net = mynet(3)
-    transfer = True
-    frozen = False
     if transfer:
         pretrain_model = torch.load(r"../data/4DL/origin.pth")
         model2_dict = net.state_dict()
@@ -91,13 +92,15 @@ def main():
             for parm in net.net.parameters():
                 parm.requires_grad = False
     net.to(device)
-    #loss_function = nn.CrossEntropyLoss()
-    loss_function = nn.MSELoss()
+    if fenlei:
+        loss_function = nn.CrossEntropyLoss()
+    if huigui:
+        loss_function = nn.MSELoss()
     params = [p for p in net.parameters() if p.requires_grad]
-    optimizer = optim.Adam(params, lr=0.0001)
-    epochs = 100
+    optimizer = optim.Adam(params, lr=0.001)
+    epochs = 300
     best_acc = 0.0
-    save_path = r'../data/4DL/mynet.pth'
+    save_path = r'../data/4DL/origin-bs16.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
         # train
@@ -108,7 +111,7 @@ def main():
             images, labels = data
             optimizer.zero_grad()
             logits = net(images.to(device)).float()
-            loss = loss_function(logits, labels.float().to(device))
+            loss = loss_function(logits, labels.long().to(device))
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
