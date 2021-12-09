@@ -1,22 +1,21 @@
 #include <iostream>
+#include <type_traits>
+#include <utility>
 
-
-template<typename T>
-class B
+struct str
 {
-public:
-    void fun(T input):
-    {
-        std::cout << input <<std::endl;
-    };
-
+    const static int internel = 3;
 };
+int p = 5;
 
+template <typename T>
+void fun()
+{
+    std::cout << (T::internel* p) <<std::endl; //*有乘法和指针的歧义
+}
 
 int main()
 {
-    x = 3;
-    y = 'a';
-    B<int> 3;
-    B<char> y;
+    fun<str>();
+    return 0;
 }

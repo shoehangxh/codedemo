@@ -64,19 +64,19 @@ def main():
     train_dataset = datasets.ImageFolder(root=os.path.join(img_path, "train"),
                                          transform=data_transform["train"])
     train_num = len(train_dataset)
-    batch_size = 16
+    batch_size = 256
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
     print('Using {} dataloader workers every process'.format(nw))
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size=batch_size, shuffle=True,
-                                               num_workers=0)
+                                               num_workers=nw)
 
     validate_dataset = datasets.ImageFolder(root=os.path.join(img_path, "val"),
                                             transform=data_transform["val"])
     val_num = len(validate_dataset)
     validate_loader = torch.utils.data.DataLoader(validate_dataset,
                                                   batch_size=batch_size, shuffle=False,
-                                                  num_workers=0)
+                                                  num_workers=nw)
 
     print("using {} images for training, {} images for validation.".format(train_num,
                                                                            val_num))
@@ -98,9 +98,9 @@ def main():
         loss_function = nn.MSELoss()
     params = [p for p in net.parameters() if p.requires_grad]
     optimizer = optim.Adam(params, lr=0.001)
-    epochs = 300
+    epochs = 200
     best_acc = 0.0
-    save_path = r'../data/4DL/origin-bs16.pth'
+    save_path = r'../data/4DL/origin-bs256.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
         # train
@@ -139,4 +139,7 @@ def main():
 
 
 if __name__ == '__main__':
+    print(torch.__version__)
+    print(torch.cuda.is_available())
     main()
+

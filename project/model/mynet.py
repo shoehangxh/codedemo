@@ -1,6 +1,6 @@
 import torch
-import torchmetrics
-import pytorch_lightning as pl
+#import torchmetrics
+#import pytorch_lightning as pl
 from torch import nn
 
 
@@ -45,7 +45,7 @@ class mynet(nn.Module):
         y = self.fc3(y)
         y = self.fc4(y)
         return y
-
+'''
 class mynet_light(pl.LightningModule):
     def __init__(self
                  #,pretrain_path='pretrain.ckpt'
@@ -90,3 +90,4 @@ class mynet_light(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
+'''
