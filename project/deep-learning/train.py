@@ -60,11 +60,11 @@ def main():
                                    #transforms.CenterCrop(224),
                                    transforms.ToTensor(),
                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])}
-    img_path = r"../data/4Vi/data2"
+    img_path = r"../data/4Vi/tmp"
     train_dataset = datasets.ImageFolder(root=os.path.join(img_path, "train"),
                                          transform=data_transform["train"])
     train_num = len(train_dataset)
-    batch_size = 256
+    batch_size = 128
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
     print('Using {} dataloader workers every process'.format(nw))
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -100,7 +100,7 @@ def main():
     optimizer = optim.Adam(params, lr=0.001)
     epochs = 200
     best_acc = 0.0
-    save_path = r'../data/4DL/origin-bs256.pth'
+    save_path = r'../data/4DL/origin(1)-bs128.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
         # train
