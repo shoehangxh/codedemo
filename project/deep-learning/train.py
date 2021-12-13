@@ -11,6 +11,8 @@ import numpy as np
 import cv2 as cv
 from PIL import Image
 from model.mynet import mynet
+from model.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
+
 
 transfer = False
 frozen = False
@@ -60,11 +62,11 @@ def main():
                                    #transforms.CenterCrop(224),
                                    transforms.ToTensor(),
                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])}
-    img_path = r"../data/4Vi/tmp"
+    img_path = r"../data/4Vi/data2"
     train_dataset = datasets.ImageFolder(root=os.path.join(img_path, "train"),
                                          transform=data_transform["train"])
     train_num = len(train_dataset)
-    batch_size = 128
+    batch_size = 16
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
     print('Using {} dataloader workers every process'.format(nw))
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -81,7 +83,13 @@ def main():
     print("using {} images for training, {} images for validation.".format(train_num,
                                                                            val_num))
 
-    net = mynet(3)
+    #net = mynet(3)
+    #net = resnet18()
+    #net = resnet34()
+    #net = resnet50()
+    net = resnet101()
+    #net = resnet152()
+
     if transfer:
         pretrain_model = torch.load(r"../data/4DL/origin.pth")
         model2_dict = net.state_dict()
@@ -100,7 +108,7 @@ def main():
     optimizer = optim.Adam(params, lr=0.001)
     epochs = 200
     best_acc = 0.0
-    save_path = r'../data/4DL/origin(1)-bs128.pth'
+    save_path = r'../data/4DL/resnet101-bs16.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
         # train
