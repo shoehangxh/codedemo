@@ -16,6 +16,7 @@ from model.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 
 transfer = False
 frozen = False
+valid = False
 
 def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -29,7 +30,7 @@ def main():
         "val": transforms.Compose([transforms.Resize(101),
                                    transforms.ToTensor(),
                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])}
-    img_path = r"../data/4Vi/data2"
+    img_path = r"../data/4DL/my_data/cl"
     train_dataset = datasets.ImageFolder(root=os.path.join(img_path, "train"),
                                          transform=data_transform["train"])
     train_num = len(train_dataset)
@@ -40,7 +41,7 @@ def main():
                                                batch_size=batch_size, shuffle=True,
                                                num_workers=nw)
 
-    if (not transfer):
+    if valid:
         validate_dataset = datasets.ImageFolder(root=os.path.join(img_path, "val"),
                                                 transform=data_transform["val"])
         val_num = len(validate_dataset)
@@ -53,8 +54,8 @@ def main():
     else:
         print("using {} images for training".format(train_num))
 
-    #net = mynet(3)
-    net = resnet18()
+    net = mynet(3)
+    #net = resnet18()
     #net = resnet34()
     #net = resnet50()
     #net = resnet101()
@@ -94,7 +95,7 @@ def main():
                                                                      epochs,
                                                                      loss)
         # validate
-        if (not transfer):
+        if valid:
             net.eval()
             acc = 0.0  # accumulate accurate number / epoch
             with torch.no_grad():
