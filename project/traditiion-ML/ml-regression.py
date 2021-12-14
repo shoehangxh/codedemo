@@ -177,7 +177,6 @@ y_pred = regression_method(model_Lasso, X_train, X_test, y_train, y_test)
 scatter_plot(y_test,y_pred)
 
 y_test = np.array(y_test)
-y_test[0]
 _a = []
 _b = []
 _c = []

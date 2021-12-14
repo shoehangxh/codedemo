@@ -8,6 +8,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
 from model.mynet import mynet
+from model.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 
 
 class ConfusionMatrix(object):

@@ -5,7 +5,7 @@ from torch import nn
 
 
 class mynet(nn.Module):
-    def __init__(self, in_channel):
+    def __init__(self, in_channel=3):
         super(mynet, self).__init__()
         self.net = nn.Sequential(
             nn.Conv2d(in_channels=in_channel, out_channels=16, kernel_size=(5, 5), stride=(1, 1)),

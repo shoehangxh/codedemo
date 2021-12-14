@@ -16,38 +16,6 @@ from model.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 
 transfer = False
 frozen = False
-fenlei = True
-huigui = False
-
-def load_tradata():
-    root_path = r'../data/4Vi/data2/train'
-    tran_imags = []
-    labels = []
-    seq_names = ['0', '1', '2', '3', '4']
-
-    for seq_name in seq_names:
-        frames = sorted(os.listdir(os.path.join(root_path, seq_name)))
-        for frame in frames:
-            imgs = [os.path.join(root_path, seq_name, frame)]
-            imgs = np.array(Image.fromarray(cv.cvtColor(cv.imread(imgs[0], 0), cv.COLOR_BGR2RGB)))
-            imgs = cv.resize(imgs, (101, 101))
-            #imgs = np.expand_dims(imgs, axis=2)
-            imgs = imgs/255
-            tran_imags.append(imgs)
-            if fenlei:
-                labels.append(int(seq_name))
-            if huigui:
-                if seq_name == '0':
-                    labels.append(49.3)
-                elif seq_name == '1':
-                    labels.append(51.2)
-                elif seq_name == '2':
-                    labels.append(172.3)
-                elif seq_name == '3':
-                    labels.append(149.4)
-                elif seq_name == '4':
-                    labels.append(23.3)
-    return np.array(tran_imags), np.array(labels)
 
 def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -59,7 +27,6 @@ def main():
                                      transforms.ToTensor(),
                                      transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]),
         "val": transforms.Compose([transforms.Resize(101),
-                                   #transforms.CenterCrop(224),
                                    transforms.ToTensor(),
                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])}
     img_path = r"../data/4Vi/data2"
@@ -73,21 +40,24 @@ def main():
                                                batch_size=batch_size, shuffle=True,
                                                num_workers=nw)
 
-    validate_dataset = datasets.ImageFolder(root=os.path.join(img_path, "val"),
-                                            transform=data_transform["val"])
-    val_num = len(validate_dataset)
-    validate_loader = torch.utils.data.DataLoader(validate_dataset,
+    if (not transfer):
+        validate_dataset = datasets.ImageFolder(root=os.path.join(img_path, "val"),
+                                                transform=data_transform["val"])
+        val_num = len(validate_dataset)
+        validate_loader = torch.utils.data.DataLoader(validate_dataset,
                                                   batch_size=batch_size, shuffle=False,
                                                   num_workers=nw)
 
-    print("using {} images for training, {} images for validation.".format(train_num,
-                                                                           val_num))
+        print("using {} images for training, {} images for validation.".format(train_num,
+                                                                            val_num))
+    else:
+        print("using {} images for training".format(train_num))
 
     #net = mynet(3)
-    #net = resnet18()
+    net = resnet18()
     #net = resnet34()
     #net = resnet50()
-    net = resnet101()
+    #net = resnet101()
     #net = resnet152()
 
     if transfer:
@@ -100,15 +70,12 @@ def main():
             for parm in net.net.parameters():
                 parm.requires_grad = False
     net.to(device)
-    if fenlei:
-        loss_function = nn.CrossEntropyLoss()
-    if huigui:
-        loss_function = nn.MSELoss()
+    loss_function = nn.CrossEntropyLoss()
     params = [p for p in net.parameters() if p.requires_grad]
     optimizer = optim.Adam(params, lr=0.001)
     epochs = 200
     best_acc = 0.0
-    save_path = r'../data/4DL/resnet101-bs16.pth'
+    save_path = r'../data/4DL/resnet18-bs16.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
         # train
@@ -127,21 +94,22 @@ def main():
                                                                      epochs,
                                                                      loss)
         # validate
-        net.eval()
-        acc = 0.0  # accumulate accurate number / epoch
-        with torch.no_grad():
-            val_bar = tqdm(validate_loader)
-            for val_data in val_bar:
-                val_images, val_labels = val_data
-                outputs = net(val_images.to(device))
-                predict_y = torch.max(outputs, dim=1)[1]
-                acc += torch.eq(predict_y, val_labels.to(device)).sum().item()
-                val_bar.desc = "valid epoch[{}/{}]".format(epoch + 1,
+        if (not transfer):
+            net.eval()
+            acc = 0.0  # accumulate accurate number / epoch
+            with torch.no_grad():
+                val_bar = tqdm(validate_loader)
+                for val_data in val_bar:
+                    val_images, val_labels = val_data
+                    outputs = net(val_images.to(device))
+                    predict_y = torch.max(outputs, dim=1)[1]
+                    acc += torch.eq(predict_y, val_labels.to(device)).sum().item()
+                    val_bar.desc = "valid epoch[{}/{}]".format(epoch + 1,
                                                            epochs)
-        val_accurate = acc / val_num
-        print('[epoch %d] train_loss: %.3f  val_accuracy: %.3f' %
-              (epoch + 1, running_loss / train_steps, val_accurate))
-        torch.save(net.state_dict(), save_path)
+            val_accurate = acc / val_num
+            print('[epoch %d] train_loss: %.3f  val_accuracy: %.3f' %
+                (epoch + 1, running_loss / train_steps, val_accurate))
+            torch.save(net.state_dict(), save_path)
 
     print('Finished Training')
 
