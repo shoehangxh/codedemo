@@ -27,7 +27,7 @@ int main()
     std::shared_ptr<int> x = fun();
     std::shared_ptr<int> x(new int(3), fun);
 }
-*/
+
 struct Str{
     int x;
     int y;
@@ -42,13 +42,44 @@ public:
 private:
     int x;
 };
+*/
+class Str{
+    Str() :ptr(new int()) {}
+    ~Str() {delete ptr;}
+    Str(const Str& val) :ptr(new int()) //拷贝构造
+    {
+        *ptr = *(val.ptr);
+    }
+    Str& operator= （const Str& val）//拷贝赋值
+    {
+        *ptr = *(val.ptr);
+        return *this;
+    }
+    Str(Str&& val) noexcept //移动构造（移动赋值与其不存在太大的性能差别）
+    :ptr(val.ptr)
+    {
+        val.ptr = nullptr;
+    }
 
+    int& Data()
+    {
+        return *ptr
+    }
+private:
+    int* ptr;
+}
 int main()
 {
-    Str m_str;
+    Str.a;
+    a.Data() = 3;
+    Str b(a);//会出错，因为b.ptr所指向的内存与a指向的内存一致（自动生成的拷贝构造函数），
+    //但销毁的时候先销毁b，所以内存会重复销毁,因此要自己加一个拷贝构造函数/拷贝赋值函数
+    b = a; // 拷贝赋值
+    std::cout << a.Data << std::endl; 
+    /*Str m_str;
     m_str.x = 3;
     std::cout << m_str.x << std::endl; 
-    /*int* ptr = new int(3);
+    int* ptr = new int(3);
     int* ptr1 = new int[5];
     int a = 4;
     std::cout << sizeof(ptr) <<endl; //8
