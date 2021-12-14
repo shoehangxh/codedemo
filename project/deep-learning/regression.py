@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 import os
-import json
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,7 +18,7 @@ import numpy as np
 import cv2 as cv
 from PIL import Image
 from torch.utils.data import Dataset
-from model.mynet import mynet
+from model.mynet import mynet_re
 from model.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 
 transfer = True
@@ -50,7 +49,6 @@ class MyDataset(Dataset):
                 label.append(149.4)
             elif words[0] == '4':
                 label.append(23.3)
-            label.append(words[0])
         self.imgs = imgs
         self.label = label
         assert len(self.imgs) == len(self.label)
@@ -123,16 +121,14 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("using {} device.".format(device))
 
-    data_transform = transforms.Compose([transforms.Resize(256),
-                                         transforms.CenterCrop(224),
+    data_transform = transforms.Compose([transforms.Resize(101),
                                          transforms.ToTensor(),
                                          transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
-    data_root = os.path.abspath(os.path.join(os.getcwd(), "../.."))  #
     image_path = img_path = r"../data/4DL/my_data"
-    batch_size = 16
+    batch_size = 1
 
-    train_dataset = MyDataset.ImageFolder(root=os.path.join(image_path, "train"),
+    train_dataset = MyDataset(datapath=os.path.join(image_path, "train"),
                                             transform=data_transform)
     train_num = len(train_dataset)
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -140,7 +136,7 @@ if __name__ == '__main__':
                                                   num_workers=2)
 
 
-    validate_dataset = MyDataset.ImageFolder(root=os.path.join(image_path, "test"),
+    validate_dataset = MyDataset(datapath=os.path.join(image_path, "test"),
                                             transform=data_transform)
     validate_num = len(validate_dataset)
     validate_loader = torch.utils.data.DataLoader(validate_dataset,
@@ -148,10 +144,10 @@ if __name__ == '__main__':
                                                   num_workers=2)
 
 
-    net = mynet(3)
+    net = mynet_re(3)
 
     # load pretrain weights
-    model_weight_path = r"../data/4DL/mynet.pth"
+    model_weight_path = r"../data/4DL/resnet18-bs16.pth"
     assert os.path.exists(model_weight_path), "cannot find {} file".format(model_weight_path)
     net.load_state_dict(torch.load(model_weight_path, map_location=device))
     net.to(device)
@@ -163,17 +159,23 @@ if __name__ == '__main__':
     with torch.no_grad():
         for val_data in tqdm(validate_loader):
             val_images, val_labels = val_data
-            y_test.append(val_labels)
+            y_test.append(val_labels.item())
             outputs = net(val_images.to(device))
-            y_test_pre.append(outputs)
+            y_test_pre.append(outputs.cpu().item())
         for train_data in tqdm(train_loader):
             train_images, train_labels = train_data
-            y_train.append(train_labels)
+            y_train.append(train_labels.item())
             outputs = net(train_images.to(device))
-            y_train_pre.append(outputs)
+            y_train_pre.append(outputs.cpu().item())
+    print('1', y_test_pre)
+    print('2', y_test)
+    print('3', y_train_pre)
+    print('4', y_train)
+    #quit()
+    regression_method(np.array(y_test), np.array(y_test_pre), np.array(y_train), np.array(y_train_pre), train_num, validate_num)
 
-    regression_method(y_test, y_test_pre, y_train, y_train_pre, train_num, validate_num)
     y_test = np.array(y_test)
+
     _a = []
     _b = []
     _c = []
@@ -181,15 +183,15 @@ if __name__ == '__main__':
     _e = []
 
     for i in range(len(y_test)):
-        if y_test[i] == 23.3:
+        if y_test[i] == 23:
             _a.append(y_test_pre[i])
-        elif y_test[i] == 49.3:
+        elif y_test[i] == 49:
             _b.append(y_test_pre[i])
-        elif y_test[i] == 51.2:
+        elif y_test[i] == 51:
             _c.append(y_test_pre[i])
-        elif y_test[i] == 149.4:
+        elif y_test[i] == 149:
             _d.append(y_test_pre[i])
-        elif y_test[i] == 172.3:
+        elif y_test[i] == 172:
             _e.append(y_test_pre[i])
     my_data = [_a[:8], _b[:8], _c[:8], _d[:8], _e[:8]]
     _a = np.array(_a)
@@ -198,6 +200,7 @@ if __name__ == '__main__':
     _d = np.array(_d)
     _e = np.array(_e)
     all__data = [_a, _b, _c, _d, _e]
+    print(my_data)
 
     sns.set(color_codes=True)
     # sns.set_style("dark")

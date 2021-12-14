@@ -2,13 +2,50 @@
 import os
 import json
 import torch
-from torchvision import transforms, datasets
+from torchvision import transforms
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
+from PIL import Image
 from model.mynet import mynet
+from torch.utils.data import Dataset
 from model.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
+
+
+class MyDataset(Dataset):
+    def __init__(self, datapath, transform=None):
+        imgs = []
+        label = []
+        self.datapath = datapath
+        txtpath = self.datapath + '\\' + 'train.txt'
+        datainfo = open(txtpath, 'r')
+        for line in datainfo:
+            line = line.strip('\n')
+            if line == 'train.bat' or line == 'train.txt':
+                continue
+            words = line.split('_')
+            imgs.append(line)
+            label.append(words[0])
+        self.imgs = imgs
+        self.label = label
+        print(len(self.imgs))
+        print(len(self.label))
+        assert len(self.imgs) == len(self.label)
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.imgs)
+
+    def __getitem__(self, index):
+        pic = self.imgs[index]
+        label = self.label[index]
+        pic = Image.open(self.datapath + '\\' + pic)
+        if self.transform is not None:
+            pic = self.transform(pic)
+        label = np.array(label).astype(int)
+        label = torch.from_numpy(label)
+        return pic, label
 
 
 class ConfusionMatrix(object):
@@ -67,23 +104,20 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
 
-    data_transform = transforms.Compose([transforms.Resize(256),
-                                         transforms.CenterCrop(224),
+    data_transform = transforms.Compose([transforms.Resize(101),
                                          transforms.ToTensor(),
                                          transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
-    data_root = os.path.abspath(os.path.join(os.getcwd(), "../.."))  #
-    image_path = img_path = r"../data/4DL/my_data"
-    validate_dataset = datasets.ImageFolder(root=os.path.join(image_path, "val"),
-                                            transform=data_transform)
+    image_path = r"../data/4DL/my_data"
+    test_dataset = MyDataset(datapath=os.path.join(image_path, "test"), transform=data_transform)
 
-    batch_size = 16
-    validate_loader = torch.utils.data.DataLoader(validate_dataset,
+    batch_size = 1
+    test_loader = torch.utils.data.DataLoader(test_dataset,
                                                   batch_size=batch_size, shuffle=False,
                                                   num_workers=2)
     net = mynet(3)
     # load pretrain weights
-    model_weight_path = r"../data/4DL/mynet.pth"
+    model_weight_path = r"../data/4DL/mynet-bs16.pth"
     assert os.path.exists(model_weight_path), "cannot find {} file".format(model_weight_path)
     net.load_state_dict(torch.load(model_weight_path, map_location=device))
     net.to(device)
@@ -98,12 +132,12 @@ if __name__ == '__main__':
     confusion = ConfusionMatrix(num_classes=5, labels=labels)
     net.eval()
     with torch.no_grad():
-        for val_data in tqdm(validate_loader):
-            val_images, val_labels = val_data
-            outputs = net(val_images.to(device))
+        for test_data in tqdm(test_loader):
+            test_images, test_labels = test_data
+            outputs = net(test_images.to(device))
             outputs = torch.softmax(outputs, dim=1)
             outputs = torch.argmax(outputs, dim=1)
-            confusion.update(outputs.to("cpu").numpy(), val_labels.to("cpu").numpy())
+            confusion.update(outputs.to("cpu").numpy(), test_labels.to("cpu").numpy())
     confusion.plot()
     confusion.summary()
 

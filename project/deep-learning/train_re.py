@@ -11,11 +11,11 @@ import numpy as np
 import cv2 as cv
 from PIL import Image
 from torch.utils.data import Dataset
-from model.mynet import mynet
+from model.mynet import mynet_re
 from model.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 
 
-transfer = True
+transfer = False
 frozen = False
 
 class MyDataset(Dataset):
@@ -41,7 +41,6 @@ class MyDataset(Dataset):
                 label.append(149.4)
             elif words[0] == '4':
                 label.append(23.3)
-            label.append(words[0])
         self.imgs = imgs
         self.label = label
         assert len(self.imgs) == len(self.label)
@@ -73,11 +72,11 @@ def main():
         "val": transforms.Compose([transforms.Resize(101),
                                    transforms.ToTensor(),
                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])}
-    img_path = r"../data/4Vi/data2"
-    train_dataset = MyDataset.ImageFolder(root=os.path.join(img_path, "train"),
+    img_path = r"../data/4DL/my_data"
+    train_dataset = MyDataset(datapath=os.path.join(img_path, "train"),
                                          transform=data_transform["train"])
     train_num = len(train_dataset)
-    batch_size = 16
+    batch_size = 32
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
     print('Using {} dataloader workers every process'.format(nw))
     train_loader = torch.utils.data.DataLoader(train_dataset,
@@ -87,7 +86,7 @@ def main():
 
     print("using {} images for training.".format(train_num))
 
-    net = mynet(3)
+    net = mynet_re(3)
     #net = resnet18()
     #net = resnet34()
     #net = resnet50()
@@ -112,15 +111,17 @@ def main():
     save_path = r'../data/4DL/resnet18-bs16.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
-        # train
         net.train()
         running_loss = 0.0
         train_bar = tqdm(train_loader)
         for step, data in enumerate(train_bar):
             images, labels = data
+            #print('1', images)
+            #print('2', labels)
             optimizer.zero_grad()
-            logits = net(images.to(device)).float()
-            loss = loss_function(logits, labels.long().to(device))
+            logits = net(images.to(device)).float().squeeze(-1)
+            #print('3', logits)
+            loss = loss_function(logits, labels.float().to(device))
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -131,7 +132,6 @@ def main():
         print('[epoch %d] train_loss: %.3f ' %
               (epoch + 1, running_loss / train_steps, ))
         torch.save(net.state_dict(), save_path)
-
     print('Finished Training')
 
 

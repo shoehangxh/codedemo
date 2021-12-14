@@ -45,6 +45,51 @@ class mynet(nn.Module):
         y = self.fc3(y)
         y = self.fc4(y)
         return y
+
+
+class mynet_re(nn.Module):
+    def __init__(self, in_channel=3):
+        super(mynet_re, self).__init__()
+        self.net = nn.Sequential(
+            nn.Conv2d(in_channels=in_channel, out_channels=16, kernel_size=(5, 5), stride=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.BatchNorm2d(16),
+
+            nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(5, 5), stride=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.BatchNorm2d(16),
+
+
+            nn.Conv2d(in_channels=16, out_channels=64, kernel_size=(3, 3), stride=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.BatchNorm2d(64),
+
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), stride=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.BatchNorm2d(128),
+        )
+
+        self.fc1 = torch.nn.Sequential(torch.nn.Linear(2048, 512), torch.nn.ReLU(),torch.nn.BatchNorm1d(512))
+        self.fc2 = torch.nn.Sequential(torch.nn.Linear(512, 128),torch.nn.ReLU(),torch.nn.BatchNorm1d(128))
+        self.fc3 = torch.nn.Sequential(torch.nn.Linear(128, 32),torch.nn.ReLU(),torch.nn.BatchNorm1d(32))
+        self.fc4 = torch.nn.Sequential(torch.nn.Linear(32, 1))
+
+
+    def forward(self, x):
+        y = self.net(x)
+        y = y.view(y.size(0),-1)
+
+        y = self.fc1(y)
+        y = self.fc2(y)
+        y = self.fc3(y)
+        y = self.fc4(y)
+        return y
+
+
 '''
 class mynet_light(pl.LightningModule):
     def __init__(self
