@@ -1,16 +1,13 @@
 #include <iostream>
 #include <type_traits>
 
-template <int x>
-constexpr auto fun = (x % 2) + fun<x / 2>;
-
-template <>
-constexpr auto fun<0> = 0;
-
-constexpr auto x = fun<99>;
-
+struct A 
+{
+    bool b1;
+    bool b2;
+};
 int main()
 {
-    std::cout << x <<std::endl; //4
+    std ::cout << sizeof(A) <<std::endl;
 }
 
