@@ -76,7 +76,7 @@ class mynet_re(nn.Module):
         self.fc1 = torch.nn.Sequential(torch.nn.Linear(2048, 512), torch.nn.ReLU(),torch.nn.BatchNorm1d(512))
         self.fc2 = torch.nn.Sequential(torch.nn.Linear(512, 128),torch.nn.ReLU(),torch.nn.BatchNorm1d(128))
         self.fc3 = torch.nn.Sequential(torch.nn.Linear(128, 32),torch.nn.ReLU(),torch.nn.BatchNorm1d(32))
-        self.fc4 = torch.nn.Sequential(torch.nn.Linear(32, 1))
+        self.fc5 = torch.nn.Sequential(torch.nn.Linear(32, 1))
 
 
     def forward(self, x):
@@ -86,7 +86,7 @@ class mynet_re(nn.Module):
         y = self.fc1(y)
         y = self.fc2(y)
         y = self.fc3(y)
-        y = self.fc4(y)
+        y = self.fc5(y)
         return y
 
 

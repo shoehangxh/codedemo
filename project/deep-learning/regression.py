@@ -85,6 +85,7 @@ def regression_method(y_test, y_test_pre, y_train, y_train_pre,train_num, valida
     MAE = mean_absolute_error(result, y_test)
     MAE_ = mean_absolute_error(result_, y_train)
     R2 = r2_score(y_test, result)
+    R2_ = r2_score(y_train, result_)
     ARS = adj_r_squared(validate_num, y_test, result)
     ARS_ = adj_r_squared(train_num, y_train, result_)
     PR = pearsonr(y_test, result)
@@ -96,6 +97,8 @@ def regression_method(y_test, y_test_pre, y_train, y_train_pre,train_num, valida
     print(f'MAE_train={MAE_}')
     print(f'ARS={ARS}')
     print(f'ARS_train={ARS_}')
+    print(f'R2={R2}')
+    print(f'R2_train={R2_}')
     print(f'PR={PR}')
     print(f'PR_train={PR_}')
 

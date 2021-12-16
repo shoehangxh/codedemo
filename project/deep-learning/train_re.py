@@ -12,10 +12,11 @@ import cv2 as cv
 from PIL import Image
 from torch.utils.data import Dataset
 from model.mynet import mynet_re
+import matplotlib.pyplot as plt
 from model.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 
 
-transfer = False
+transfer = True
 frozen = False
 
 class MyDataset(Dataset):
@@ -94,7 +95,7 @@ def main():
     #net = resnet152()
 
     if transfer:
-        pretrain_model = torch.load(r"../data/4DL/origin.pth")
+        pretrain_model = torch.load(r"../data/4DL/4Transfer/origin-bs32.pth")
         model2_dict = net.state_dict()
         state_dict = {k: v for k, v in pretrain_model.items() if k in model2_dict.keys()}
         model2_dict.update(state_dict)
@@ -110,6 +111,7 @@ def main():
     best_acc = 0.0
     save_path = r'../data/4DL/resnet18-bs16.pth'
     train_steps = len(train_loader)
+    train_loss = []
     for epoch in range(epochs):
         net.train()
         running_loss = 0.0
@@ -131,12 +133,22 @@ def main():
 
         print('[epoch %d] train_loss: %.3f ' %
               (epoch + 1, running_loss / train_steps, ))
+        train_loss.append(running_loss / train_steps)
         torch.save(net.state_dict(), save_path)
     print('Finished Training')
+    return train_loss
 
 
 if __name__ == '__main__':
     print(torch.__version__)
     print(torch.cuda.is_available())
-    main()
+    y = main()
+    x = range(200)
+    plt.figure(figsize=(10, 8), dpi=100)
+    plt.title('mynet-origin', fontsize=20, fontweight='bold')
+    plt.xlabel("epoch", fontsize=18)
+    plt.ylabel("train_loss", fontsize=18)
+    plt.plot(x, y)
+    plt.legend()
+    plt.show()
 
